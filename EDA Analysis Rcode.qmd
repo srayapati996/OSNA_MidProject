@@ -1,0 +1,281 @@
+---
+title: "Priya NY"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+**a. Data Loading and Cleaning/Inspecting the Data (Informal EDA)**
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(readr)
+
+# Load your data
+ny2_data <- read_csv("C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewYork 2 Data/New_York_District_02.csv")
+
+# View the original dataset's dimensions and first few rows
+dim(ny2_data)      # Check the number of rows and columns
+head(ny2_data)     # View the first few rows
+
+# Check for missing values
+colSums(is.na(ny2_data))  # Count of missing values in each column
+
+# Check the structure of the dataset
+str(ny2_data)
+
+# Clean data: Rename columns for easier access
+ny2_data_clean <- ny2_data %>%
+  rename(
+    Topic = `Topic`, 
+    Subject = `Subject`, 
+    Title = `Title`, 
+    Estimate = `District 02 Estimate`
+  ) %>%
+  # Remove any rows with missing estimates
+  filter(!is.na(Estimate)) %>%
+  # Remove commas and convert to numeric
+  mutate(Estimate = as.numeric(gsub(",", "", Estimate)))
+
+```
+
+**b. Data Summary (Formal EDA)**
+
+```{r}
+# Verify the cleaned data
+dim(ny2_data_clean)  # Check the number of rows after cleaning
+summary(ny2_data_clean)  # Get a summary of the cleaned dataset
+```
+
+**To check for missing values, because missing data can impact the quality of your analysis.**
+
+```{r}
+# Check for missing values
+sum(is.na(ny2_data))
+```
+
+**c. Visualizing Data (Informal EDA)**
+
+```{r}
+{r}
+# Load ggplot2 and dplyr packages
+library(ggplot2)
+library(dplyr)
+
+# Corrected ggplot code with the correct column name
+ggplot(ny2_data %>% filter(Topic == "Workers"), aes(x = Subject, y = `District.02.Estimate`)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(title = "Employment Distribution in NY-2", x = "Category", y = "Estimate")
+```
+
+To See valid Columns and data filteration
+
+```{r}
+# Check the column names
+colnames(ny2_data)
+
+# Remove commas and convert 'District 02 Estimate' to numeric
+ny2_data$`District.02.Estimate` <- as.numeric(gsub(",", "", ny2_data$`District.02.Estimate`))
+
+# Check for NAs created during conversion
+sum(is.na(ny2_data$`District 02 Estimate`))
+
+# Check structure after conversion
+str(ny2_data$`District 02 Estimate`)
+
+```
+
+**d. Generating Insights and Trends (Formal EDA)**
+
+```{r}
+# Formal summary of employment data
+employment_summary <- ny2_data %>%
+  filter(Topic == "Workers") %>%
+  group_by(Subject) %>%
+  summarize(mean_estimate = mean(`District.02.Estimate`, na.rm = TRUE))
+
+# Print the summary
+print(employment_summary)
+```
+
+**To understand trends and patterns in data. (Informal EDA)**
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+library(stringr)
+
+# Load your data
+ny2_data <- read.csv("C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewYork 2 Data/New_York_District_02.csv")
+
+# Check structure of the loaded data
+str(ny2_data)
+
+# Clean data: Rename columns for easier access and remove missing estimates
+ny2_data_clean <- ny2_data %>%
+  rename(
+    Topic = `Topic`, 
+    Subject = `Subject`, 
+    Title = `Title`, 
+    Estimate = `District.02.Estimate`  # Ensure this matches the actual column name
+  ) %>%
+  filter(!is.na(Estimate)) %>%
+  mutate(Estimate = as.numeric(gsub(",", "", Estimate)))  # Ensure estimates are numeric
+
+# Check the cleaned data structure
+str(ny2_data_clean)
+
+# Summary statistics for the dataset
+summary(ny2_data_clean)
+
+# Wrap long topic titles for better readability
+ny2_data_clean$Title <- str_wrap(ny2_data_clean$Title, width = 30)
+
+# Select specific topics (e.g., "Income," "Workers," and others)
+selected_topics <- c("Workers", "Socioeconomic", "Housing", "Business", "People")  # Add more topics as needed
+
+# Filter data for the selected topics
+filtered_data <- ny2_data_clean %>%
+  filter(Topic %in% selected_topics)
+
+# Keep only the top 10 estimates based on the filtered data
+top_n_data <- filtered_data %>%
+  slice_max(Estimate, n = 10)  # Get top 10 based on Estimate
+
+# Visualizing the distribution of estimates by topic for the top 10
+ggplot(top_n_data, aes(x = reorder(Title, Estimate, na.rm = TRUE), y = Estimate / 1e3, fill = Subject)) +
+  geom_bar(stat = "identity", position = "dodge", na.rm = TRUE) +
+  coord_flip() +
+  labs(title = "Top 10 Characteristics of NY-2 by Estimate",
+       x = "Characteristic",
+       y = "Estimate (in 1,000s)",
+       fill = "Subject") +
+  scale_y_continuous(labels = scales::comma) +  # Adjust y-axis to show comma-separated values
+  theme_minimal() +
+  theme(text = element_text(size = 10),
+        axis.text.y = element_text(size = 8))  # Adjust font size for long labels
+
+```
+
+```{r}
+# Displaying the summary with clearer formatting
+summary_by_subject <- ny2_data_clean %>%
+  group_by(Subject) %>%
+  summarize(mean_estimate = mean(Estimate, na.rm = TRUE)) %>%
+  arrange(desc(mean_estimate))  # Optionally arrange by mean estimate
+
+# View the summary
+print(summary_by_subject)
+
+```
+
+```{r}
+
+```
+
+**3. Comparisons Between Groups -** It helps reveal important information, guide policies, and support smart decisions, making it essential for data-driven practices in many areas.
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+# Load your data
+ny2_data <- read.csv("C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewYork 2 Data/New_York_District_02.csv")
+
+# Clean data: Convert Estimate to numeric and remove NA values
+ny2_data_clean <- ny2_data %>%
+  mutate(Estimate = as.numeric(gsub(",", "", `District.02.Estimate`))) %>%
+  filter(!is.na(Estimate))  # Remove rows with missing estimates
+
+# Summary statistics for Estimate by Topic
+summary_stats <- ny2_data_clean %>%
+  group_by(Topic) %>%
+  summarize(
+    Mean_Estimate = mean(Estimate, na.rm = TRUE),
+    SD_Estimate = sd(Estimate, na.rm = TRUE),
+    Count = n()
+  )
+
+# Print the summary statistics
+print(summary_stats)
+
+# Boxplot for Estimate by Topic
+ggplot(ny2_data_clean, aes(x = Topic, y = Estimate, fill = Topic)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Estimates by Topic",
+       x = "Topic",
+       y = "Estimate") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x labels for readability
+
+# Bar plot for Mean Estimates by Topic
+mean_estimates <- ny2_data_clean %>%
+  group_by(Topic) %>%
+  summarize(Mean_Estimate = mean(Estimate, na.rm = TRUE))
+
+ggplot(mean_estimates, aes(x = reorder(Topic, Mean_Estimate), y = Mean_Estimate, fill = Topic)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Mean Estimates by Topic",
+       x = "Topic",
+       y = "Mean Estimate") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x labels for readability
+
+# ANOVA test
+anova_results <- aov(Estimate ~ Topic, data = ny2_data_clean)
+summary(anova_results)
+
+# If significant, you can follow up with post-hoc tests
+library(agricolae)
+posthoc_results <- HSD.test(anova_results, "Topic", group = TRUE)
+print(posthoc_results)
+
+
+```
+
+**4. Spatial Analysis (GIS)-** GIS enhances our ability to understand, analyze, and visualize data in a geographic context, leading to more informed decisions across various sectors.
+
+```{r}
+# Load necessary libraries
+library(sf)
+library(ggplot2)
+library(dplyr)
+
+# Load spatial data for NY-2
+ny2_shapefile <- st_read("C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewFiles/ny_pov_2022_t (1)/ny_pov_2022_t.shp")
+
+# Load your data
+ny2_data <- read.csv("C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewYork 2 Data/New_York_District_02.csv")
+
+# Perform the left join using the correct identifiers
+# Make sure to use the correct column names for joining
+ny2_geo_data <- left_join(ny2_shapefile, ny2_data, by = c("GEOID" = "District.02.Estimate"))  # Adjust the column names accordingly
+
+# Check the column names of the joined data
+print("Joined Data Column Names:")
+print(names(ny2_geo_data))
+
+# Verify the first few rows of the joined data
+print("First few rows of the joined data:")
+print(head(ny2_geo_data))
+
+# Check if the column for filling is present and correctly named
+if ("District.02.Estimate" %in% names(ny2_geo_data)) {
+  # Plotting the spatial data
+  ggplot(data = ny2_geo_data) +
+    geom_sf(aes(fill = `District.02.Estimate`)) +  # Use backticks for columns with dots
+    labs(title = "Geographic Distribution of Estimates in NY-2",
+         fill = "Estimate") +
+    theme_minimal()
+} else {
+  warning("Column 'District.02.Estimate' not found in the joined data.")
+}
+```

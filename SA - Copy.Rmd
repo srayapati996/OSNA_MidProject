@@ -1,0 +1,971 @@
+---
+title: "OSNA_Project"
+output: html_document
+date: "2024-10-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+
+```{r}
+options(repos = c(CRAN = "https://cran.r-project.org"))
+
+install.packages(c("sf", "ggplot2", "dplyr"))
+
+```
+
+
+
+## R Markdown
+
+```{r}
+library(sf)
+library(ggplot2)
+library(dplyr)
+
+# Load the shapefile
+vtd_data <- st_read("C:\\Desktop Files\\Semester 3 Data\\OSNA\\Project\\NYS_Congressional_Districts_473029709882129489\\NYS_Congressional_Districts.shp")
+
+```
+
+
+```{r}
+head(vtd_data)
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+vtd_data$Party <- as.factor(vtd_data$Party)
+
+# Create a new column to specify if the district is District 2
+vtd_data <- vtd_data %>%
+  mutate(NY2 = ifelse(District == 2, "NY2", "Normal"))
+
+# Plotting the congressional districts with borders
+ggplot(data = vtd_data) +
+  geom_sf(aes(fill = NY2), color = "black", size = 0.5) +  # Fill based on Highlight
+  theme_minimal() +
+  labs(title = "Congressional Districts in New York (2020)",
+       fill = "District NY2") +
+  scale_fill_manual(values = c("NY2" = "orange", "Normal" = "lightblue")) +  # Custom colors
+  theme(legend.position = "right")  # Adjust legend position as needed
+```
+
+
+
+
+
+
+```{r}
+vtd_data$Party <- as.factor(vtd_data$Party)
+
+# Create a new column to specify if the district is District 2
+vtd_data <- vtd_data %>%
+  mutate(NY2 = ifelse(District == 2, "NY2", "Normal"))
+
+# Define colors for Democratic and Republican parties
+party_colors <- c("Democratic" = "blue", "Republican" = "red", "NY2" = "orange")
+
+# Plotting the congressional districts with party colors and highlighting District 2's border
+ggplot(data = vtd_data) +
+  geom_sf(aes(fill = Party), color = "black", size = 0.5) +  # Default border color
+  geom_sf(data = vtd_data %>% filter(District == 2), aes(fill = "NY2"), color = "orange", size = 1.5) +  # Highlight District 2
+  theme_minimal() +
+  labs(title = "NY Congressional District 2",
+       fill = "Party") +
+  scale_fill_manual(values = party_colors) +  # Custom colors for parties
+  theme(legend.position = "right")  # Adjust legend position as needed
+```
+
+
+
+
+
+
+```{r}
+# Get the bounding box for Congressional District 2
+district_2_bounds <- st_bbox(vtd_data %>% filter(District == 2))
+
+# Plotting the congressional districts with party colors and highlighting District 2's border
+ggplot(data = vtd_data) +
+  geom_sf(aes(fill = Party), color = "black", size = 0.5) +  # Default border color
+  geom_sf(data = vtd_data %>% filter(District == 2), aes(fill = "NY2"), color = "orange", size = 1.5) +  # Highlight District 2
+  theme_minimal() +
+  labs(title = "Congressional Districts in New York (2020)",
+       fill = "Party") +
+  scale_fill_manual(values = party_colors) +  # Custom colors for parties
+  theme(legend.position = "right") +  # Adjust legend position as needed
+  xlim(district_2_bounds["xmin"], district_2_bounds["xmax"]) +  # Set x limits
+  ylim(district_2_bounds["ymin"], district_2_bounds["ymax"])      # Set y limits
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+library(sf)
+library(ggplot2)
+library(dplyr)
+
+# Load the shapefile
+prec_data <- st_read("C:\\Desktop Files\\Semester 3 Data\\OSNA\\Project\\ny_2022_gen_prec (1)\\ny_2022_gen_prec\\ny_2022_gen_prec.shp")
+```
+
+
+
+
+
+
+```{r}
+head(prec_data)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+# Load necessary libraries
+library(sf)
+library(ggplot2)
+
+# Assuming your precincts data is already an sf object
+# If not, convert it using the geometry column
+precincts <- st_as_sf(prec_data, wkt = "geometry") # Uncomment if needed
+
+# Create a basic ggplot of the precinct boundaries
+ggplot(data = precincts) +
+  geom_sf(fill = NA, color = "black", lwd = 0.05) +  # Only outlines, no fill
+  labs(title = "Precinct Boundaries") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+
+
+
+
+```{r}
+unique_districts <- unique(precincts$CONG_DIST)
+
+# Print the unique districts
+print(unique_districts)
+```
+
+
+
+
+
+
+
+
+
+```{r}
+precincts$highlight <- ifelse(precincts$CONG_DIST == "02", "Yes", "No")
+
+sum(precincts$CONG_DIST == "02")
+table(precincts$highlight)
+
+
+# Create a ggplot of the precinct boundaries, highlighting those in CONG_DIST 2
+ggplot(data = precincts) +
+  geom_sf(fill = "lightgrey", color = "black", lwd = 0.5) +  # All precincts in light grey
+  geom_sf(data = subset(precincts, highlight == "Yes"), fill = "yellow", color = "black", lwd = 0.5) +  # Highlight for CONG_DIST 2
+  labs(title = "Precinct Boundaries Highlighting Congressional District 2") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+# Get the bounding box for Congressional District 2
+cong_dist_2_bounds <- st_bbox(subset(precincts, CONG_DIST == "02"))
+
+# Create a ggplot with enlarged limits around Congressional District 2
+ggplot(data = precincts) +
+  geom_sf(fill = "lightgrey", color = "black", lwd = 0.5) +  # All precincts in light grey
+  geom_sf(data = subset(precincts, highlight == "Yes"), fill = "yellow", color = "black", lwd = 0.5) +  # Highlight for CONG_DIST 2
+  labs(title = "Precinct Boundaries Highlighting Congressional District 2") +
+  xlim(cong_dist_2_bounds["xmin"], cong_dist_2_bounds["xmax"]) +  # Set x limits
+  ylim(cong_dist_2_bounds["ymin"], cong_dist_2_bounds["ymax"]) +  # Set y limits
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+
+
+
+
+```{r}
+# Get the bounding box for Congressional District 2
+cong_dist_2_bounds <- st_bbox(subset(precincts, CONG_DIST == "02"))
+
+# Create a ggplot with only highlighted precincts
+ggplot(data = subset(precincts, highlight == "Yes")) +
+  geom_sf(fill = "yellow", color = "black", lwd = 0.5) +  # Highlighted CONG_DIST 2
+  labs(title = "Precincts for Congressional District 2") +
+  xlim(cong_dist_2_bounds["xmin"], cong_dist_2_bounds["xmax"]) +  # Set x limits
+  ylim(cong_dist_2_bounds["ymin"], cong_dist_2_bounds["ymax"]) +  # Set y limits
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+
+
+
+
+
+
+
+```{r}
+library(dplyr)
+
+# Filter the data for Congressional District 2
+district_2_data <- prec_data %>%
+  filter(CONG_DIST == "02") %>%  # Keep only rows for District 2
+  select(UNIQUE_ID, COUNTYFP, GEOID, CountyName, EDName, EDID, MuniName, MuniID, CONG_DIST, GCON02DGOR, GCON02OWRI, GCON02RGAR)  # Select relevant columns
+
+# View the filtered data
+print(district_2_data)
+
+```
+
+
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+
+# Assuming your data is stored in a dataframe called `il_prec_win_sen`
+
+# Step 1: Determine the winner in each precinct
+il_prec_win_sen <- district_2_data %>%
+  mutate(Winner = case_when(
+    GCON02DGOR > GCON02RGAR ~ "Democrat",
+    GCON02DGOR < GCON02RGAR ~ "Republican",
+    TRUE ~ "Tie"
+  ))
+
+# Step 2: Plotting the results
+g_congressional <- ggplot(il_prec_win_sen, aes(fill = Winner)) + 
+  geom_sf() + 
+  scale_fill_manual(values = c("Democrat" = "blue", "Republican" = "red", "Tie" = "green")) +
+  labs(title = "2022 NY-02 Congressional Election Results by Precinct") +
+  theme_void()
+
+# Display the plot
+print(g_congressional)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+votes_data <- data.frame(
+  Candidate = c("Democratic", "Republican", "Write-In"),
+  Votes = c(sum(district_2_data$GCON02DGOR, na.rm = TRUE),  # Total Democratic Votes
+             sum(district_2_data$GCON02RGAR, na.rm = TRUE),  # Total Republican Votes
+             sum(district_2_data$GCON02OWRI, na.rm = TRUE))  # Total Write-In Votes
+)
+
+# Create a bar chart
+ggplot(data = votes_data, aes(x = Candidate, y = Votes, fill = Candidate)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Voting Results for Congressional District 2",
+       x = "Candidates",
+       y = "Number of Votes") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Democratic" = "blue", "Republican" = "red", "Write-In" = "grey")) +
+  theme(legend.position = "none")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+race_data <- st_read('C:\\Desktop Files\\Semester 3 Data\\OSNA\\Project\\ny_race_2022_t\\ny_race_2022_t.shp')
+district_2_data
+
+```
+
+```{r}
+print(st_geometry_type(district_2_data))  # Check the geometry type
+print(st_geometry_type(race_data))  
+```
+
+
+
+
+
+
+
+
+```{r}
+# Perform a spatial join to merge district data with race data
+
+
+```
+
+
+
+
+
+
+```{r}
+# Check validity of geometries in district_2_data
+validity_district <- st_is_valid(district_2_data)
+print(validity_district)  # Prints TRUE for valid geometries and FALSE for invalid ones
+
+# Check validity of geometries in race_data
+validity_race <- st_is_valid(race_data)
+print(validity_race)  # Prints TRUE for valid geometries and FALSE for invalid ones
+
+```
+
+
+
+
+```{r}
+# Check for invalid geometries in district_2_data
+invalid_geometries <- st_is_valid(district_2_data, quiet = FALSE)
+
+# Get the indices of invalid geometries
+invalid_indices <- which(!invalid_geometries)
+
+# Print the invalid geometries (if any)
+if (length(invalid_indices) > 0) {
+  print(district_2_data[invalid_indices, ])
+} else {
+  print("All geometries in district_2_data are valid.")
+}
+
+
+```
+
+
+
+```{r}
+# Fix invalid geometries in district_2_data
+district_2_data <- st_make_valid(district_2_data)
+
+# Check again for validity
+invalid_geometries_after_fix <- st_is_valid(district_2_data, quiet = FALSE)
+if (any(!invalid_geometries_after_fix)) {
+  print("There are still invalid geometries.")
+} else {
+  print("All geometries are valid after fixing.")
+}
+
+```
+
+
+
+
+
+```{r}
+# Check validity of geometries in district_2_data
+validity_district <- st_is_valid(district_2_data)
+print(validity_district)  # Prints TRUE for valid geometries and FALSE for invalid ones
+
+# Check validity of geometries in race_data
+validity_race <- st_is_valid(race_data)
+print(validity_race)  # Prints TRUE for valid geometries and FALSE for invalid ones
+
+```
+
+
+
+```{r}
+# Merge the two datasets using st_join
+merged_data <- st_join(district_2_data, race_data, join = st_intersects)
+
+# Print the merged data to check the result
+print(merged_data)
+
+```
+
+```{r}
+# Dimensions of the original datasets
+district_2_dims <- dim(district_2_data)
+race_data_dims <- dim(race_data)
+
+# Dimensions of the merged dataset
+merged_data_dims <- dim(merged_data)
+
+# Print the dimensions
+cat("Dimensions of district_2_data:", district_2_dims[1], "rows and", district_2_dims[2], "columns\n")
+cat("Dimensions of race_data:", race_data_dims[1], "rows and", race_data_dims[2], "columns\n")
+cat("Dimensions of merged_data:", merged_data_dims[1], "rows and", merged_data_dims[2], "columns\n")
+
+```
+
+
+
+
+```{r}
+# Remove duplicates
+merged_data <- merged_data[!duplicated(merged_data), ]
+print(merged_data)
+```
+
+
+
+
+
+
+
+
+```{r}
+# Summarize the data by race
+race_summary <- merged_data %>%
+  summarize(
+    Total_Population = sum(TOT_POP22, na.rm = TRUE),
+    White = sum(WHT_NHSP22, na.rm = TRUE),
+    Black = sum(BLK_NHSP22, na.rm = TRUE),
+    Hispanic = sum(HSP_POP22, na.rm = TRUE),
+    Asian = sum(ASN_NHSP22, na.rm = TRUE),
+    Other = sum(OTH_NHSP22, na.rm = TRUE)
+  )
+
+# Reshape for ggplot
+race_long <- tidyr::pivot_longer(
+  race_summary,
+  cols = c(White, Black, Hispanic, Asian, Other),
+  names_to = "Race",
+  values_to = "Population"
+)
+
+```
+
+
+
+
+
+```{r}
+# Create a bar plot
+ggplot(race_long, aes(x = Race, y = Population, fill = Race)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Population Distribution by Race",
+       x = "Race",
+       y = "Population") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set3")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+# Define the function to get the dominant race
+get_dominant_race <- function(row) {
+  races <- c(
+    White = row["WHT_NHSP22"],
+    Black = row["BLK_NHSP22"],
+    Asian = row["ASN_NHSP22"],
+    Hispanic = row["HPI_NHSP22"]
+  )
+  names(which.max(races))
+}
+
+
+```
+
+
+
+
+```{r}
+library(dplyr)
+
+# Define the function to get the dominant race
+get_dominant_race <- function(row) {
+  # Handle NA values by replacing them with 0 for the calculation
+  races <- c(
+    White = row["WHT_NHSP22"],
+    Black = row["BLK_NHSP22"],
+    Asian = row["ASN_NHSP22"],
+    Hispanic = row["HPI_NHSP22"]
+  )
+  
+  # Replace NA values with 0
+  races[is.na(races)] <- 0
+  
+  # Find and return the name of the race with the maximum value
+  names(which.max(races))
+}
+
+# Create a new variable for the modified dataset
+new_data <- merged_data %>%
+  rowwise() %>%
+  mutate(Dominant_Race = {
+    dominant_race <- get_dominant_race(c_across(c("WHT_NHSP22", "BLK_NHSP22", "ASN_NHSP22", "HPI_NHSP22")))
+    print(dominant_race)  # Print the dominant race for each row for debugging
+    dominant_race
+  })
+
+# Check the first few rows of new_data
+head(new_data)
+
+
+```
+
+
+
+
+
+
+
+
+```{r}
+
+```
+
+
+
+
+```{r}
+library(ggplot2)
+
+# Define a color map for the races
+color_map <- c("White" = "lightgrey", "Black" = "black", "Asian" = "blue", "Hispanic" = "red", "Other" = "grey")
+
+# Plotting the precincts with color based on the dominant race
+ggplot(data = new_data) +
+  geom_sf(aes(fill = Dominant_Race), color = "black") +
+  scale_fill_manual(values = color_map, na.value = "grey", name = "Dominant Race") +
+  labs(title = "Dominant Race in Precincts") +
+  theme_minimal()
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+education_data <- st_read('C:\\Desktop Files\\Semester 3 Data\\OSNA\\Project\\ny_edu_2022_bg\\ny_edu_2022_bg.shp')
+```
+
+
+
+
+```{r}
+head(education_data
+     )
+```
+
+
+
+
+```{r}
+print(st_geometry_type(district_2_data))  # Check the geometry type
+print(st_geometry_type(education_data)) 
+```
+
+
+```{r}
+# Check validity of geometries in district_2_data
+validity_district <- st_is_valid(district_2_data)
+print(validity_district)  # Prints TRUE for valid geometries and FALSE for invalid ones
+
+# Check validity of geometries in race_data
+validity_edu <- st_is_valid(education_data)
+print(validity_edu)  # Prints TRUE for valid geometries and FALSE for invalid ones
+
+```
+
+
+```{r}
+# Check for invalid geometries in district_2_data
+invalid_geometries <- st_is_valid(education_data, quiet = FALSE)
+
+# Get the indices of invalid geometries
+invalid_indices <- which(!invalid_geometries)
+
+# Print the invalid geometries (if any)
+if (length(invalid_indices) > 0) {
+  print(education_data[invalid_indices, ])
+} else {
+  print("All geometries in education_data are valid.")
+}
+
+```
+
+
+
+```{r}
+# Merge the two datasets using st_join
+merged_data <- st_join(district_2_data, education_data, join = st_intersects)
+
+# Print the merged data to check the result
+print(merged_data)
+
+```
+
+
+
+
+```{r}
+library(dplyr)
+
+# Summarize education data by CountyName, if applicable
+education_summary <- merged_data %>%
+  group_by(CountyName) %>%
+  summarise(
+    Total_Bachelor_Degrees = sum(BACH_DEG22, na.rm = TRUE),
+    Total_Master_Degrees = sum(MAST_DEG22, na.rm = TRUE),
+    Total_Doctoral_Degrees = sum(DOCT_DEG22, na.rm = TRUE),
+    .groups = 'drop'
+  )
+
+
+```
+
+
+
+```{r}
+
+
+```
+
+```{r}
+install.packages("tmap")
+```
+
+
+
+
+```{r}
+library(tmap)
+
+# Set up tmap mode to plotting
+tmap_mode("plot")
+
+# Create a choropleth map showing total bachelor's degrees by county
+tm_shape(merged_data) +
+  tm_polygons("BACH_DEG22", 
+               style = "quantile", 
+               palette = "Blues", 
+               title = "Bachelor's Degrees") +
+  tm_layout(title = "Choropleth Map of Bachelor's Degrees by precinct")
+
+```
+
+
+
+
+
+```{r}
+library(tmap)
+
+# Set up tmap mode for plotting
+tmap_mode("plot")
+
+# Map for Bachelor's Degrees
+bachelors_map <- tm_shape(merged_data) +
+  tm_polygons("BACH_DEG22", 
+               style = "quantile", 
+               palette = "Blues", 
+               title = "Bachelor's Degrees") +
+  tm_layout(title = "Choropleth Map of Bachelor's Degrees by precinct")
+
+# Map for Master's Degrees
+masters_map <- tm_shape(merged_data) +
+  tm_polygons("MAST_DEG22", 
+               style = "quantile", 
+               palette = "Greens", 
+               title = "Master's Degrees") +
+  tm_layout(title = "Choropleth Map of Master's Degrees by precinct")
+
+# Map for Doctoral Degrees
+doctorals_map <- tm_shape(merged_data) +
+  tm_polygons("DOCT_DEG22", 
+               style = "quantile", 
+               palette = "Reds", 
+               title = "Doctoral Degrees") +
+  tm_layout(title = "Choropleth Map of Doctoral Degrees by precinct")
+
+# Plot each map in separate windows
+print(bachelors_map)
+print(masters_map)
+print(doctorals_map)
+
+```
+
+
+
+
+```{r}
+poverty_data <- st_read('C:\\Desktop Files\\Semester 3 Data\\OSNA\\Project\\ny_pov_2022_bg\\ny_pov_2022_bg.shp')
+
+
+```
+
+
+
+
+
+```{r}
+# Check for null values in each column
+na_summary <- poverty_data %>%
+  summarise(across(everything(), ~ sum(is.na(.)), .names = "na_count_{col}"))
+
+print(na_summary)
+
+```
+
+
+
+
+
+
+
+```{r}
+# Check for invalid geometries in district_2_data
+invalid_geometries <- st_is_valid(poverty_data, quiet = FALSE)
+
+# Get the indices of invalid geometries
+invalid_indices <- which(!invalid_geometries)
+
+# Print the invalid geometries (if any)
+if (length(invalid_indices) > 0) {
+  print(poverty_data[invalid_indices, ])
+} else {
+  print("All geometries in education_data are valid.")
+}
+```
+
+
+
+
+
+```{r}
+# Merge the two datasets using st_join
+merged_data <- st_join(district_2_data, poverty_data, join = st_intersects)
+
+# Print the merged data to check the result
+print(merged_data)
+```
+
+
+
+
+
+```{r}
+library(tmap)
+
+# Set up tmap mode for plotting
+tmap_mode("plot")
+
+# Map for Total Population Below Poverty
+poverty_map_total <- tm_shape(merged_data) +
+  tm_polygons("TOT_BPOV22", 
+               style = "quantile", 
+               palette = "Reds", 
+               title = "Total Population Below Poverty") +
+  tm_layout(title = "Choropleth Map of Total Population Below Poverty by precinct")
+
+# Map for Children in Poverty
+poverty_map_children <- tm_shape(merged_data) +
+  tm_polygons("CHI_BPOV22", 
+               style = "quantile", 
+               palette = "Blues", 
+               title = "Children in Poverty") +
+  tm_layout(title = "Choropleth Map of Children in Poverty by County")
+
+# Map for Married Population in Poverty
+poverty_map_married <- tm_shape(merged_data) +
+  tm_polygons("MAR_BPOV22", 
+               style = "quantile", 
+               palette = "Greens", 
+               title = "Married Population in Poverty") +
+  tm_layout(title = "Choropleth Map of Married Population in Poverty by County")
+
+# Map for Male Population in Poverty
+poverty_map_male <- tm_shape(merged_data) +
+  tm_polygons("MAL_BPOV22", 
+               style = "quantile", 
+               palette = "Purples", 
+               title = "Male Population in Poverty") +
+  tm_layout(title = "Choropleth Map of Male Population in Poverty by County")
+
+# Map for Female Population in Poverty
+poverty_map_female <- tm_shape(merged_data) +
+  tm_polygons("FEM_BPOV22", 
+               style = "quantile", 
+               palette = "Oranges", 
+               title = "Female Population in Poverty") +
+  tm_layout(title = "Choropleth Map of Female Population in Poverty by County")
+
+# Display maps separately
+print(poverty_map_total)
+print(poverty_map_children)
+print(poverty_map_married)
+print(poverty_map_male)
+print(poverty_map_female)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

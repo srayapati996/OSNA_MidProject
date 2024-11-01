@@ -1,0 +1,297 @@
+---
+title: "PD"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+First, Load the data with appropriate files and library.
+
+```{r chunk01, cache = TRUE}
+
+# Load the necessary libraries
+library(readr)
+library(dplyr)
+
+newyork2_census <- read.csv('C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewYork 2 Data/New_York_District_02.csv')
+```
+
+Checking the Structure of the Data of the dataset.
+
+```{r chunk02, cache = TRUE}
+# Verify the structure of the dataset
+str(newyork2_census)
+
+# Get a summary of the dataset
+summary(newyork2_census)
+
+```
+
+Filtering or Replacing Data (for example, removing rows with specific values)
+
+```{r chunk03, cache = TRUE}
+
+# Verify if the dataset is empty
+if (nrow(newyork2_census) == 0) {
+    stop("The dataset 'newyork2_census' is empty. Please check the file path and contents.")
+} else {
+    # Replace 'Replace' with NA
+    newyork2_census <- newyork2_census %>%
+        mutate(across(everything(), ~ na_if(., 'Replace')))
+    
+    # Filter the dataset for NY-2
+    ny2_data <- newyork2_census %>% filter(District.02.Estimate == "NY-2")
+
+    # View the filtered dataset
+    head(ny2_data)
+}
+
+```
+
+Save the cleaned dataset as a CSV in R
+
+```{r chunk04, cache = TRUE}
+# Save the cleaned dataset
+write.csv(ny2_data, 'C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewFiles/congressional_data_and_targets.csv', row.names = FALSE)
+
+```
+
+Plot the workers graph for NY-2
+
+```{r chunk05, cache = TRUE}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(stringr)  # Ensure stringr is loaded for str_wrap
+
+# Read in the data
+ny2_data <- read.csv("C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewYork 2 Data/New_York_District_02.csv")
+
+# Filter out relevant columns and clean data
+ny2_data_clean <- ny2_data %>%
+  select(Topic, Subject, Title, Estimate = District.02.Estimate) %>%
+  mutate(Estimate = as.numeric(gsub(",", "", Estimate))) %>%
+  filter(!is.na(Estimate))  # Remove rows with missing estimates
+
+# Filter data for Workers
+workers_data <- ny2_data_clean %>% filter(Topic == "Workers")
+
+# Wrap long titles for readability
+workers_data$Title <- str_wrap(workers_data$Title, width = 25)
+
+# Plot for Workers with text wrapping and axis scaling
+ggplot(workers_data, aes(x = reorder(Title, Estimate, na.rm = TRUE), 
+                          y = Estimate / 1e3, fill = Subject)) +
+  geom_bar(stat = "identity", position = "dodge", na.rm = TRUE) +
+  coord_flip() +
+  labs(title = "Characteristics of NY-2: Workers",
+       x = "Employment Status",
+       y = "Estimate (in 1,000s)",
+       fill = "Subject") +
+  scale_y_continuous(labels = scales::comma) +  # Adjust y-axis to show comma-separated values
+  theme_minimal() +
+  theme(text = element_text(size = 8),
+        axis.text.y = element_text(size = 8))  # Adjust font size for long labels
+
+```
+
+Plot the Incomes graph for NY-2
+
+```{r chunk06, cache = TRUE}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Read in the data
+ny2_data <- read.csv("C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewYork 2 Data/New_York_District_02.csv")
+
+# Filter out relevant columns and clean data
+ny2_data_clean <- ny2_data %>%
+  select(Topic, Subject, Title, Estimate = District.02.Estimate) %>%
+  mutate(Estimate = as.numeric(gsub(",", "", Estimate))) %>%
+  filter(!is.na(Estimate))  # Remove rows with missing estimates
+
+# Filter data for Socioeconomic
+socioeconomic_data <- ny2_data_clean %>% filter(Topic == "Socioeconomic")
+
+# Wrap long titles for readability (if needed)
+socioeconomic_data$Title <- str_wrap(socioeconomic_data$Title, width = 25)
+
+# Plot for Socioeconomic with text wrapping and axis scaling
+ggplot(socioeconomic_data, aes(x = reorder(Title, Estimate, na.rm = TRUE), 
+                                y = Estimate, fill = Subject)) +
+  geom_bar(stat = "identity", position = "dodge", na.rm = TRUE) +
+  coord_flip() +
+  labs(title = "Characteristics of NY-2: Socioeconomic (Income)",
+       x = "Socioeconomic Characteristics",
+       y = "Percentage (%)",
+       fill = "Category") +
+  theme_minimal() +
+  theme(text = element_text(size = 8),
+        axis.text.y = element_text(size = 8))  # Adjust font size for long labels
+
+
+```
+
+Plot the Education graph for NY-2
+
+```{r chunk07, cache = TRUE}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Read in the data
+ny2_data <- read.csv("C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewYork 2 Data/New_York_District_02.csv")
+
+# Filter out relevant columns and clean data
+ny2_data_clean <- ny2_data %>%
+  select(Topic, Subject, Title, Estimate = District.02.Estimate) %>%
+  mutate(Estimate = as.numeric(gsub(",", "", Estimate))) %>%
+  filter(!is.na(Estimate))  # Remove rows with missing estimates
+
+# 2. Plot for Education
+education_data <- ny2_data_clean %>% filter(Topic == "Education")
+ggplot(education_data, aes(x = reorder(Title, Estimate), y = Estimate, fill = Subject)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  coord_flip() +
+  labs(title = "Characteristics of NY-2: Education",
+       x = "Characteristic",
+       y = "Estimate",
+       fill = "Subject") +
+  theme_minimal() +
+  theme(text = element_text(size = 10))
+```
+
+Plot the Housing graph for NY-2
+
+```{r chunk08, cache = TRUE}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Read in the data
+ny2_data <- read.csv("C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewYork 2 Data/New_York_District_02.csv")
+
+# Filter out relevant columns and clean data
+ny2_data_clean <- ny2_data %>%
+  select(Topic, Subject, Title, Estimate = District.02.Estimate) %>%
+  mutate(Estimate = as.numeric(gsub(",", "", Estimate))) %>%
+  filter(!is.na(Estimate))  # Remove rows with missing estimates
+
+# Filter data for Housing
+housing_data <- ny2_data_clean %>% filter(Topic == "Housing")
+
+# Wrap long titles for readability (if needed)
+housing_data$Title <- str_wrap(housing_data$Title, width = 25)
+
+# Plot for Housing with text wrapping and axis scaling
+ggplot(housing_data, aes(x = reorder(Title, Estimate, na.rm = TRUE), 
+                          y = Estimate / 1e3, fill = Subject)) +
+  geom_bar(stat = "identity", position = "dodge", na.rm = TRUE) +
+  coord_flip() +
+  labs(title = "Characteristics of NY-2: Housing",
+       x = "Housing Characteristics",
+       y = "Estimate (in 1,000s)",
+       fill = "Category") +
+  scale_y_continuous(labels = scales::comma) +  # Adjust y-axis to show comma-separated values
+  theme_minimal() +
+  theme(text = element_text(size = 8),
+        axis.text.y = element_text(size = 8))  # Adjust font size for long labels
+```
+
+Plot the Business graph for NY-2
+
+```{r chunk09, cache = TRUE}
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Read in the data
+ny2_data <- read.csv("C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewYork 2 Data/New_York_District_02.csv")
+
+# Filter out relevant columns and clean data
+ny2_data_clean <- ny2_data %>%
+  select(Topic, Subject, Title, Estimate = District.02.Estimate) %>%
+  mutate(Estimate = as.numeric(gsub(",", "", Estimate))) %>%
+  filter(!is.na(Estimate))  # Remove rows with missing estimates
+
+# 2. Plot for Business
+business_data <- ny2_data_clean %>% filter(Topic == "Business")
+
+# Wrap long titles for readability
+business_data$Title <- str_wrap(business_data$Title, width = 25)
+
+# Plot for Business with text wrapping and axis scaling
+ggplot(business_data, aes(x = reorder(Title, Estimate, na.rm = TRUE), y = Estimate / 1e3, fill = Subject)) +
+  geom_bar(stat = "identity", position = "dodge", na.rm = TRUE) +
+  coord_flip() +
+  labs(title = "Characteristics of NY-2: Business",
+       x = "Characteristic",
+       y = "Estimate (in 1,000s)",
+       fill = "Subject") +
+  scale_y_continuous(labels = scales::comma) +  # Adjust y-axis to show comma-separated values
+  theme_minimal() +
+  theme(text = element_text(size = 8),
+        axis.text.y = element_text(size = 8))  # Adjust font size for long labels
+
+```
+
+Plot the People graph for NY-2
+
+```{r chunk10, cache = TRUE}
+
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Read in the data
+ny2_data <- read.csv("C:/Users/Priya Darshani/OneDrive/Documents/Fall 2024/CS 579-OSNA/Team Project/NewYork 2 Data/New_York_District_02.csv")
+
+# Filter out relevant columns and clean data
+ny2_data_clean <- ny2_data %>%
+  select(Topic, Subject, Title, Estimate = District.02.Estimate) %>%
+  mutate(Estimate = as.numeric(gsub(",", "", Estimate))) %>%
+  filter(!is.na(Estimate))  # Remove rows with missing estimates
+
+# Filter data for People
+people_data <- ny2_data_clean %>% filter(Topic == "People")
+
+# Wrap long titles for readability
+people_data$Title <- str_wrap(people_data$Title, width = 25)
+
+# Plot for People with text wrapping and axis scaling
+ggplot(people_data, aes(x = reorder(Title, Estimate, na.rm = TRUE), 
+                         y = Estimate / 1e3, fill = Subject)) +
+  geom_bar(stat = "identity", position = "dodge", na.rm = TRUE) +
+  coord_flip() +
+  labs(title = "Characteristics of NY-2: People",
+       x = "Characteristic",
+       y = "Estimate (in 1,000s)",
+       fill = "Subject") +
+  scale_y_continuous(labels = scales::comma) +  # Adjust y-axis to show comma-separated values
+  theme_minimal() +
+  theme(text = element_text(size = 8),
+        axis.text.y = element_text(size = 8))  # Adjust font size for long labels
+
+```
+
+```         
+```
+
+```         
+```
+
+```         
+```
+
+```         
+```
+
+```         
+```
